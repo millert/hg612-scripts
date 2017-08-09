@@ -169,10 +169,14 @@ while ($run) {
 
 	# Indicate we have passed the 'Since Link time' section so we can get ES and CRC stats
 	$at_total_result = 0;
+	$bearer = 0;
 
 	# Loop over results, parsing expanded adsl info output
 	while (@result) {
-		if ($result[0] =~ /SNR\s+\(dB\):\s+(-?\d+.\d+)\s+(-?\d+.\d+)/) {
+		if ($result[0] =~ /^\s+Bearer (\d+)\s/) {
+			# Bearer 0 or 1
+			$bearer = $1;
+		} elsif ($result[0] =~ /SNR\s+\(dB\):\s+(-?\d+.\d+)\s+(-?\d+.\d+)/) {
 
 			# SNR Margin down/up in dB
 			# Higher is better, 11-20dB is good
@@ -190,17 +194,23 @@ while ($run) {
 			$power_down = $1;	# DSLAM power
 			$power_up   = $2;	# modem power
 		} elsif ($result[0] =~ /INP:\s+(\d+.\d+)\s+(\d+.\d+)/) {
-			$inp_down = $1;
-			$inp_up   = $2;
+			# Only select for Bearer 0 (Bearer 1 used for vectoring)
+			if ($bearer == 0) {
+				$inp_down = $1;
+				$inp_up   = $2;
+			}
 		} elsif ($result[0] =~ /delay:\s+(\d+)\s+(\d+)/) {
-			$delay_down = $1;
-			$delay_up   = $2;
+			# Only select for Bearer 0 (Bearer 1 used for vectoring)
+			if ($bearer == 0) {
+				$delay_down = $1;
+				$delay_up   = $2;
+			}
 		} elsif ($result[0] =~ /Max:\s+Upstream rate = (\d+) Kbps, Downstream rate = (\d+) Kbps/) {
 
 			# Max speed in Kbps
 			$max_down = $2;
 			$max_up   = $1;
-		} elsif ($result[0] =~ /Bearer.*Upstream rate = (\d+) Kbps, Downstream rate = (\d+) Kbps/) {
+		} elsif ($result[0] =~ /Bearer:\s+0,\s+Upstream rate = (\d+) Kbps, Downstream rate = (\d+) Kbps/) {
 
 			# Current speed in Kbps
 			$cur_down = $2;
