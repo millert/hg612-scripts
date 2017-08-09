@@ -64,12 +64,12 @@ if (not -e $RRD_SIGNAL_FILE) {
 		"--start=N",
 		"--step=$STEP",
 
-		"DS:snru:GAUGE:$HEARTBEAT:0:100",
-		"DS:snrd:GAUGE:$HEARTBEAT:0:100",
-		"DS:attu:GAUGE:$HEARTBEAT:0:100",
-		"DS:attd:GAUGE:$HEARTBEAT:0:100",
-		"DS:powu:GAUGE:$HEARTBEAT:0:100",
-		"DS:powd:GAUGE:$HEARTBEAT:0:100",
+		"DS:snru:GAUGE:$HEARTBEAT:-100:100",
+		"DS:snrd:GAUGE:$HEARTBEAT:-100:100",
+		"DS:attu:GAUGE:$HEARTBEAT:-100:100",
+		"DS:attd:GAUGE:$HEARTBEAT:-100:100",
+		"DS:powu:GAUGE:$HEARTBEAT:-100:100",
+		"DS:powd:GAUGE:$HEARTBEAT:-100:100",
 		"DS:inpu:GAUGE:$HEARTBEAT:0:104857600",
 		"DS:inpd:GAUGE:$HEARTBEAT:0:104857600",
 		"DS:delayu:GAUGE:$HEARTBEAT:0:104857600",
@@ -172,21 +172,23 @@ while ($run) {
 
 	# Loop over results, parsing expanded adsl info output
 	while (@result) {
-		if ($result[0] =~ /SNR\s+\(dB\):\s+(\d+.\d+)\s+(\d+.\d+)/) {
+		if ($result[0] =~ /SNR\s+\(dB\):\s+(-?\d+.\d+)\s+(-?\d+.\d+)/) {
 
 			# SNR Margin down/up in dB
+			# Higher is better, 11-20dB is good
 			$snr_down = $1;
 			$snr_up   = $2;
-		} elsif ($result[0] =~ /Attn\(dB\):\s+(\d+.\d+)\s+(\d+.\d+)/) {
+		} elsif ($result[0] =~ /Attn\(dB\):\s+(-?\d+.\d+)\s+(-?\d+.\d+)/) {
 
-			# Attenuation down/up in dB
+			# Attenuation (signal loss) down/up in dB
+			# Lower is better, 50-60dB is poor
 			$att_down = $1;
 			$att_up   = $2;
-		} elsif ($result[0] =~ /Pwr\(dBm\):\s+(\d+.\d+)\s+(\d+.\d+)/) {
+		} elsif ($result[0] =~ /Pwr\(dBm\):\s+(-?\d+.\d+)\s+(-?\d+.\d+)/) {
 
-			# Output power down/up in dB
-			$power_down = $1;
-			$power_up   = $2;
+			# Output power down/up in dB (max ~15dB)
+			$power_down = $1;	# DSLAM power
+			$power_up   = $2;	# modem power
 		} elsif ($result[0] =~ /INP:\s+(\d+.\d+)\s+(\d+.\d+)/) {
 			$inp_down = $1;
 			$inp_up   = $2;
@@ -195,12 +197,12 @@ while ($run) {
 			$delay_up   = $2;
 		} elsif ($result[0] =~ /Max:\s+Upstream rate = (\d+) Kbps, Downstream rate = (\d+) Kbps/) {
 
-			# Output power down/up in dB
+			# Max speed in Kbps
 			$max_down = $2;
 			$max_up   = $1;
 		} elsif ($result[0] =~ /Bearer.*Upstream rate = (\d+) Kbps, Downstream rate = (\d+) Kbps/) {
 
-			# Output power down/up in dB
+			# Current speed in Kbps
 			$cur_down = $2;
 			$cur_up   = $1;
 		}
